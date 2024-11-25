@@ -43,7 +43,7 @@ itsdangerous>=2.2.0
 Jinja2>=3.1.4
 joblib>=1.4.2
 kiwisolver>=1.4.7
-kubernetes>=31.0.0
+kubernetes==31.0.0
 markdown-it-py>=3.0.0
 MarkupSafe>=3.0.2
 matplotlib>=3.9.2
@@ -82,7 +82,7 @@ pyparsing>=3.2.0
 PyPika>=0.48.9
 pyproject_hooks>=1.2.0
 pyreadline3>=3.5.4
-Pyrebase4>=4.8.0
+Pyrebase4==4.8.0
 python-dateutil>=2.9.0.post0
 python-dotenv>=1.0.1
 PyYAML>=6.0.2
@@ -103,7 +103,7 @@ tokenizers>=0.20.3
 tqdm>=4.67.1
 typer>=0.13.1
 typing_extensions>=4.12.2
-urllib3>=2.0
+urllib3==1.26.15
 uvicorn>=0.32.1
 watchfiles>=1.0.0
 websocket-client>=1.8.0
