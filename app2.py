@@ -4,6 +4,8 @@ import numpy as np
 from PIL import Image
 import io
 from sentence_transformers import SentenceTransformer
+
+from vector.feedback import search_glasses_with_feedback
 from vector.milvus5 import (
     insert_data_to_milvus,
     query_milvus, extract_query
@@ -60,6 +62,27 @@ def search():
     return jsonify([
         result.id for result in results
     ])
+
+@app.route("/feedback", methods=["POST"])
+def feedback():
+    insert_data_to_milvus()
+    query = request.args.get("query")
+    extracted_query = extract_query("둥근형", "가을웜톤")
+    print(extracted_query)
+    query_vector = model.encode([extracted_query])[0]
+    # Milvus에서 검색
+    results = query_milvus(query_vector)
+    print(results)
+    results = sorted(results, key=lambda result: result.distance)
+    results = search_glasses_with_feedback(query_vector, [result.text for result in results], query, "glasses_collection")
+
+    return jsonify([
+        result.id for result in results
+    ])
+
+
+
+
 
 
 if __name__ == '__main__':
