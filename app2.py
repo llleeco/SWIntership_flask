@@ -5,8 +5,13 @@ from PIL import Image
 import io
 import dlib
 from personal_color_analysis import personal_color
+from glasses_mix_picture.GlassesAdder import GlassesAdder
 import pandas as pd
+from urllib.parse import unquote, quote, urlparse
+import requests
+import logging
 import os
+import base64
 from face_shape_classify.align_face import align_face
 from face_shape_classify.classify_face_shape import classify_face_shape
 from face_shape_classify.preprocess_image import preprocess_image
@@ -140,9 +145,72 @@ def feedback():
     return jsonify({
         "glasses_id": [result.id for result in results_]
     })
+@app.route('/process_images', methods=['POST'])
+def process_images():
+    try:
+        landmark_model_path = "./shape_predictor_68_face_landmarks.dat"  # 상대 경로
+        glasses_adder = GlassesAdder(landmark_model_path)
 
+        # 사용자 얼굴 이미지 가져오기
+        user_file = request.files.get('user_image')  # 사용자 얼굴 이미지 파일
+        if not user_file or user_file.filename == '':
+            logging.error("사용자 이미지가 업로드되지 않았습니다.")
+            return jsonify({"error": "사용자 이미지가 업로드되지 않았습니다."}), 400
 
+        try:
+            user_image_data = user_file.read()
+            user_image = Image.open(io.BytesIO(user_image_data))
+            user_img_cv = cv2.cvtColor(np.array(user_image), cv2.COLOR_RGB2BGR)  # OpenCV 이미지 변환
+        except Exception as e:
+            logging.error(f"사용자 이미지를 처리하는 데 실패했습니다. 오류: {str(e)}")
+            return jsonify({"error": "사용자 이미지를 처리하는 데 실패했습니다.", "details": str(e)}), 400
+
+        # 다중 안경 이미지 처리
+        glasses_images = []
+        for key in request.files.keys():
+            if key.startswith('glasses_image_'):  # glasses_image_1, glasses_image_2, ...
+                try:
+                    glasses_file = request.files[key]
+                    glasses_image_data = glasses_file.read()
+                    glasses_img = cv2.imdecode(np.frombuffer(glasses_image_data, np.uint8), cv2.IMREAD_UNCHANGED)
+                    if glasses_img is None:
+                        logging.error(f"안경 이미지를 디코딩하는 데 실패했습니다: {key}")
+                        continue
+                    glasses_images.append(glasses_img)
+                except Exception as e:
+                    logging.error(f"{key} 처리를 실패했습니다. 오류: {str(e)}")
+                    return jsonify({"error": f"{key} 처리를 실패했습니다.", "details": str(e)}), 400
+
+        if not glasses_images:
+            logging.error("유효한 안경 이미지가 업로드되지 않았습니다.")
+            return jsonify({"error": "유효한 안경 이미지가 업로드되지 않았습니다."}), 400
+
+        # 원본 이미지에 안경 이미지 합성
+        results = []
+        for glasses_img in glasses_images:
+            try:
+                # 사용자 원본 이미지 복사 후 합성
+                original_user_img = user_img_cv.copy()
+                output_img = glasses_adder.add_glasses(original_user_img, glasses_img)
+                if output_img is None:
+                    raise ValueError("출력 이미지를 생성하는 데 실패했습니다.")
+                
+                # 합성 결과를 Base64로 인코딩
+                _, buffer = cv2.imencode('.png', output_img, [cv2.IMWRITE_PNG_COMPRESSION, 3])
+                base64_output_image = base64.b64encode(buffer).decode('utf-8')
+                results.append(base64_output_image)
+            except Exception as e:
+                logging.error(f"안경 합성 중 오류가 발생했습니다. 세부 정보: {str(e)}")
+                return jsonify({"error": "안경을 얼굴 이미지에 적용하는 데 실패했습니다.", "details": str(e)}), 500
+
+        # 성공적으로 처리된 이미지 반환
+        return jsonify({"images": results})
+
+    except Exception as e:
+        # 예외 발생 시 로그 기록 및 에러 응답
+        logging.error(f"처리 중 예기치 못한 오류가 발생했습니다. 세부 정보: {str(e)}")
+        return jsonify({"error": "예기치 못한 오류가 발생했습니다.", "details": str(e)}), 500
 if __name__ == '__main__':
     app.run(debug=True)
-
+   
 
