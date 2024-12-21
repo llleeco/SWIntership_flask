@@ -21,8 +21,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # pip 업그레이드 및 캐시 제거
 RUN pip install --upgrade pip && pip cache purge
 
-# Python 종속성 파일 복사 및 설치
-COPY requirements.txt /app/
+# Python 종속성 설치 (requirements.txt 변경 시에만 다시 빌드됨)
+COPY requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
 # 애플리케이션 코드 복사 (변경될 가능성이 높음)
@@ -37,7 +37,7 @@ ENV FLASK_ENV=production
 # Flask 실행을 위한 포트 노출
 EXPOSE ${FLASK_RUN_PORT}
 
-# 헬스체크 (컨테이너 상태 확인)
+# 컨테이너 상태 확인
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:${FLASK_RUN_PORT}/ || exit 1
 
