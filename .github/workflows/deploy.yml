@@ -92,7 +92,7 @@ jobs:
             cd ~/flask-milvus-app
             sudo docker-compose down || true
             sudo docker-compose pull
-            sudo docker-compose up -d --build --timeout 600
+            sudo docker-compose up -d --timeout 600
 
             # 컨테이너 상태 확인
             echo "컨테이너 상태를 확인합니다."

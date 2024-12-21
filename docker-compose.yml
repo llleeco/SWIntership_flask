@@ -1,11 +1,7 @@
-
-
 services:
   flask-app:
     container_name: flask-app
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: your-dockerhub-username/flask-app:latest # Docker Hub에서 이미지를 가져옵니다.
     ports:
       - "5000:5000"
     depends_on:
@@ -28,3 +24,4 @@ services:
 
 volumes:
   milvus_data:
+
