@@ -1,7 +1,7 @@
 services:
   flask-app:
     container_name: flask-app
-    image: your-dockerhub-username/flask-app:latest # Docker Hub에서 이미지를 가져옵니다.
+    image: shdhkim/flask-app:latest # Docker Hub에서 이미지를 가져옵니다.
     ports:
       - "5000:5000"
     depends_on:
