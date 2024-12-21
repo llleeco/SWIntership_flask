@@ -57,7 +57,7 @@ jobs:
           ssh-keyscan -H $HOST >> ~/.ssh/known_hosts
 
           # 전체 프로젝트를 EC2로 전송
-          scp -i ec2_key.pem -o StrictHostKeyChecking=no -r $(pwd)/ $USER@$HOST:~/flask-milvus-app/
+          scp -i ec2_key.pem -o StrictHostKeyChecking=no -r $(pwd)/* $USER@$HOST:~/flask-milvus-app/
 
           # EC2에서 Docker Compose 실행
           ssh -i ec2_key.pem $USER@$HOST << 'EOF'
