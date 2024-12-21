@@ -56,11 +56,13 @@ jobs:
           chmod 400 ec2_key.pem
           ssh-keyscan -H $HOST >> ~/.ssh/known_hosts
 
-          # 전체 프로젝트를 EC2로 전송
-          scp -i ec2_key.pem -o StrictHostKeyChecking=no -r $(pwd)/* $USER@$HOST:~/flask-milvus-app/
+          # 전체 프로젝트를 EC2로 전송 (에러 방지 및 정확한 복사)
+          rsync -avz -e "ssh -i ec2_key.pem -o StrictHostKeyChecking=no" $(pwd)/* $USER@$HOST:~/flask-milvus-app/
 
           # EC2에서 Docker Compose 실행
-          ssh -i ec2_key.pem $USER@$HOST << 'EOF'
+          ssh -o ServerAliveInterval=60 -o ServerAliveCountMax=5 -i ec2_key.pem $USER@$HOST << 'EOF'
+            set -e
+
             # Docker 설치 (설치되어 있지 않은 경우)
             if ! [ -x "$(command -v docker)" ]; then
               echo "Docker가 설치되어 있지 않음. 설치 중..."
@@ -82,14 +84,25 @@ jobs:
             fi
 
             # Docker Hub 로그인
+            echo "Docker Hub에 로그인합니다..."
             sudo docker login -u "${DOCKER_USER}" -p "${DOCKER_PASS}"
 
             # 프로젝트 디렉터리 이동 및 Docker Compose 실행
+            echo "Docker Compose 실행..."
             cd ~/flask-milvus-app
             sudo docker-compose down || true
             sudo docker-compose pull
-            sudo docker-compose up -d --build
+            sudo docker-compose up -d --build --timeout 600
 
             # 컨테이너 상태 확인
+            echo "컨테이너 상태를 확인합니다."
             sudo docker-compose ps
+
+            # HEALTHCHECK 검증
+            echo "HEALTHCHECK 검증 중..."
+            if [[ $(sudo docker inspect --format='{{.State.Health.Status}}' flask-app) != "healthy" ]]; then
+              echo "ERROR: Flask 컨테이너가 healthy 상태가 아닙니다!"
+              sudo docker-compose logs flask-app
+              exit 1
+            fi
           EOF

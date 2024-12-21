@@ -18,28 +18,22 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# pip 업그레이드 및 캐시 제거
-RUN pip install --upgrade pip && pip cache purge
+# pip 업그레이드
+RUN pip install --upgrade pip
 
-# Python 종속성 설치 (requirements.txt 변경 시에만 다시 빌드됨)
-COPY requirements.txt /app/requirements.txt
+# Python 종속성 파일 복사 및 설치
+COPY requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 애플리케이션 코드 복사 (변경될 가능성이 높음)
+# 애플리케이션 코드 복사
 COPY . /app/
 
-# Flask 실행 관련 환경 변수 설정
+# Flask 애플리케이션 실행을 위한 포트 노출
+EXPOSE 5000
+
+# 환경 변수 설정 (Flask 실행)
 ENV FLASK_APP=app.py
 ENV FLASK_RUN_HOST=0.0.0.0
-ENV FLASK_RUN_PORT=5000
-ENV FLASK_ENV=production
-
-# Flask 실행을 위한 포트 노출
-EXPOSE ${FLASK_RUN_PORT}
-
-# 컨테이너 상태 확인
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:${FLASK_RUN_PORT}/ || exit 1
 
 # 컨테이너 시작 시 Flask 실행
-CMD ["python", "-m", "flask", "run", "--host=0.0.0.0", "--port=5000"]
+CMD ["flask", "run"]
