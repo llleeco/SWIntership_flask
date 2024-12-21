@@ -12,41 +12,41 @@ jobs:
 
     steps:
       # 1. 소스코드 체크아웃
-      - name: 소스코드 체크아웃
+      - name: Checkout Source Code
         uses: actions/checkout@v4
 
       # 2. Python 3.11 설정
-      - name: Python 3.11 설치
+      - name: Set up Python 3.11
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
 
       # 3. Python 의존성 설치
-      - name: Python 의존성 설치
+      - name: Install Python Dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
       # 4. Docker Hub 로그인
-      - name: Docker Hub 로그인
+      - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       # 5. Docker 이미지 빌드 & 푸시
-      - name: Docker 이미지 빌드 및 푸시
+      - name: Build and Push Docker Image
         uses: docker/build-push-action@v4
         with:
           context: .
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/flask-app:latest
 
-      # 6. EC2에 배포
-      - name: EC2에 배포 (SCP + SSH)
+      # 6. EC2에 배포 (SCP + SSH)
+      - name: Deploy to EC2 (SCP + SSH)
         env:
           HOST: 3.39.237.18                # EC2 퍼블릭 IP
-          USER: ${{ secrets.DEPLOY_USER }} # ec2-user 등
+          USER: ${{ secrets.DEPLOY_USER }} # EC2 사용자 (예: ec2-user)
           KEY: ${{ secrets.DEPLOY_KEY }}   # SSH 개인 키
           DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASS: ${{ secrets.DOCKER_PASSWORD }}
