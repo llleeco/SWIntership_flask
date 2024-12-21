@@ -33,21 +33,20 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # 5. Docker 이미지 빌드 및 푸시
-      - name: Build and Push Docker Image
+      # 5. Docker 이미지 빌드 및 푸시 (Flask)
+      - name: Build and Push Flask Docker Image
         uses: docker/build-push-action@v4
         with:
           context: .
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/flask-app:latest
 
-      # 6. EC2로 배포 (Docker Pull 방식)
-      - name: Deploy to EC2 via Docker Pull
+      # 6. EC2로 배포 (Docker Compose 방식)
+      - name: Deploy to EC2 via Docker Compose
         env:
-          HOST: 3.39.237.18  # EC2 퍼블릭 IP
-          USER: ${{ secrets.DEPLOY_USER }} # EC2 사용자 이름
-          KEY: ${{ secrets.DEPLOY_KEY }}  # SSH 개인 키
-          IMAGE_NAME: ${{ secrets.DOCKER_USERNAME }}/flask-app:latest
+          HOST: 3.39.237.18  # EC2 퍼블릭 IP 
+          USER: ${{ secrets.DEPLOY_USER }}  # EC2 사용자 이름 
+          KEY: ${{ secrets.DEPLOY_KEY }}  # SSH 개인 키 
         run: |
           # SSH 설정
           mkdir -p ~/.ssh
@@ -56,7 +55,7 @@ jobs:
           echo "Adding $HOST to known_hosts"
           ssh-keyscan -H $HOST >> ~/.ssh/known_hosts || exit 1
 
-          # EC2 접속 및 Docker 실행
+          # EC2 접속 및 Docker Compose 실행
           ssh -i deploy_key.pem $USER@$HOST <<EOF
             # Docker 설치 확인 및 설치
             if ! [ -x "$(command -v docker)" ]; then
@@ -65,12 +64,52 @@ jobs:
               sudo service docker start
             fi
 
-            # Docker Hub 로그인 (필요한 경우)
+            # Docker Compose 설치 확인 및 설치
+            if ! [ -x "$(command -v docker-compose)" ]; then
+              sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+              sudo chmod +x /usr/local/bin/docker-compose
+            fi
+
+            # Docker Hub 로그인
             sudo docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
 
-            # Docker 이미지 Pull 및 컨테이너 실행
-            sudo docker stop flask-app || true
-            sudo docker rm flask-app || true
-            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/flask-app:latest
-            sudo docker run -d -p 80:80 --name flask-app ${{ secrets.DOCKER_USERNAME }}/flask-app:latest
+            # 프로젝트 디렉터리로 이동
+            mkdir -p ~/flask-milvus-app
+            cd ~/flask-milvus-app
+
+            # docker-compose.yml 파일 복사
+            cat << 'COMPOSE' > docker-compose.yml
+            version: '3.8'
+            services:
+              flask-app:
+                container_name: flask-app
+                image: ${{ secrets.DOCKER_USERNAME }}/flask-app:latest
+                ports:
+                  - "5000:5000"
+                depends_on:
+                  - milvus
+                environment:
+                  - MILVUS_HOST=milvus
+                  - MILVUS_PORT=19530
+                restart: always
+
+              milvus:
+                image: milvusdb/milvus:latest
+                container_name: milvus
+                ports:
+                  - "19530:19530"
+                volumes:
+                  - milvus_data:/var/lib/milvus
+                environment:
+                  - MILVUS_LOG_LEVEL=info
+                restart: always
+
+            volumes:
+              milvus_data:
+            COMPOSE
+
+            # Docker Compose 실행
+            sudo docker-compose down
+            sudo docker-compose pull
+            sudo docker-compose up -d --build
           EOF
