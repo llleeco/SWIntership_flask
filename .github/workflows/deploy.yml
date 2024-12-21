@@ -57,23 +57,28 @@ jobs:
           ssh-keyscan -H $HOST >> ~/.ssh/known_hosts
 
           # 전체 프로젝트를 EC2로 전송
-          scp -i ec2_key.pem -o StrictHostKeyChecking=no -r . \
-            $USER@$HOST:~/flask-milvus-app/
+          scp -i ec2_key.pem -o StrictHostKeyChecking=no -r ./ $USER@$HOST:~/flask-milvus-app/
 
           # EC2에서 Docker Compose 실행
           ssh -i ec2_key.pem $USER@$HOST << 'EOF'
             # Docker 설치 (설치되어 있지 않은 경우)
-            if ! [ -x "\$(command -v docker)" ]; then
+            if ! [ -x "$(command -v docker)" ]; then
+              echo "Docker가 설치되어 있지 않음. 설치 중..."
               sudo yum update -y
               sudo yum install -y docker
               sudo service docker start
+            else
+              echo "Docker가 이미 설치되어 있습니다."
             fi
 
             # Docker Compose 설치 (설치되어 있지 않은 경우)
-            if ! [ -x "\$(command -v docker-compose)" ]; then
-              sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-\$(uname -s)-\$(uname -m)" \
+            if ! [ -x "$(command -v docker-compose)" ]; then
+              echo "Docker Compose가 설치되어 있지 않음. 설치 중..."
+              sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" \
                 -o /usr/local/bin/docker-compose
               sudo chmod +x /usr/local/bin/docker-compose
+            else
+              echo "Docker Compose가 이미 설치되어 있습니다."
             fi
 
             # Docker Hub 로그인
