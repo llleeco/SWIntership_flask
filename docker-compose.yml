@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  flask-app:
+    container_name: flask-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    depends_on:
+      - milvus
+    environment:
+      - MILVUS_HOST=milvus
+      - MILVUS_PORT=19530
+    restart: always
+
+  milvus:
+    image: milvusdb/milvus:latest
+    container_name: milvus
+    ports:
+      - "19530:19530"
+    volumes:
+      - milvus_data:/var/lib/milvus
+    environment:
+      - MILVUS_LOG_LEVEL=info
+    restart: always
+
+volumes:
+  milvus_data:
