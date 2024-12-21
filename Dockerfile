@@ -31,5 +31,9 @@ COPY . /app/
 # Flask 애플리케이션 실행을 위한 포트 노출
 EXPOSE 5000
 
-# 컨테이너 시작 시 실행할 명령어
-CMD ["python", "app.py"]
+# 환경 변수 설정 (Flask 실행)
+ENV FLASK_APP=app.py
+ENV FLASK_RUN_HOST=0.0.0.0
+
+# 컨테이너 시작 시 Flask 실행
+CMD ["flask", "run"]
