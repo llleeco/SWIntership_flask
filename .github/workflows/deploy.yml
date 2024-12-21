@@ -56,7 +56,7 @@ jobs:
           ssh-keyscan -H $HOST >> ~/.ssh/known_hosts || exit 1
 
           # EC2 접속 및 Docker Compose 실행
-          ssh -i deploy_key.pem $USER@$HOST <<EOF
+          ssh -i deploy_key.pem $USER@$HOST <<'EOF'
             # Docker 설치 확인 및 설치
             if ! [ -x "$(command -v docker)" ]; then
               sudo yum update -y
@@ -78,35 +78,36 @@ jobs:
             cd ~/flask-milvus-app
 
             # docker-compose.yml 파일 복사
-            cat << 'COMPOSE' > docker-compose.yml
-            version: '3.8'
-            services:
-              flask-app:
-                container_name: flask-app
-                image: ${{ secrets.DOCKER_USERNAME }}/flask-app:latest
-                ports:
-                  - "5000:5000"
-                depends_on:
-                  - milvus
-                environment:
-                  - MILVUS_HOST=milvus
-                  - MILVUS_PORT=19530
-                restart: always
+            cat > docker-compose.yml <<'COMPOSE'
+version: '3.8'
 
-              milvus:
-                image: milvusdb/milvus:latest
-                container_name: milvus
-                ports:
-                  - "19530:19530"
-                volumes:
-                  - milvus_data:/var/lib/milvus
-                environment:
-                  - MILVUS_LOG_LEVEL=info
-                restart: always
+services:
+  flask-app:
+    container_name: flask-app
+    image: ${{ secrets.DOCKER_USERNAME }}/flask-app:latest
+    ports:
+      - "5000:5000"
+    depends_on:
+      - milvus
+    environment:
+      - MILVUS_HOST=milvus
+      - MILVUS_PORT=19530
+    restart: always
 
-            volumes:
-              milvus_data:
-            COMPOSE
+  milvus:
+    image: milvusdb/milvus:latest
+    container_name: milvus
+    ports:
+      - "19530:19530"
+    volumes:
+      - milvus_data:/var/lib/milvus
+    environment:
+      - MILVUS_LOG_LEVEL=info
+    restart: always
+
+volumes:
+  milvus_data:
+COMPOSE
 
             # Docker Compose 실행
             sudo docker-compose down
