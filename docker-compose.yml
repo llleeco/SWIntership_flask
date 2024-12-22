@@ -1,6 +1,6 @@
 services:
   milvus:
-    image: milvusdb/milvus:latest-cpu-only
+    image: milvusdb/milvus:2.3.4-cpu
     container_name: milvus
     ports:
       - "19530:19530"
@@ -13,7 +13,8 @@ services:
       - LD_PRELOAD=
     command: milvus run standalone
     restart: always
-    network_mode: "host"
+    networks:
+      - app_network
     deploy:
       resources:
         limits:
@@ -33,6 +34,8 @@ services:
       - MILVUS_HOST=milvus
       - MILVUS_PORT=19530
     restart: always
+    networks:
+      - app_network
 
 volumes:
   milvus_data:
@@ -41,3 +44,7 @@ volumes:
       type: none
       device: /var/lib/docker/volumes/milvus_data/_data
       o: bind
+
+networks:
+  app_network:
+    driver: bridge
