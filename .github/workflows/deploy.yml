@@ -41,8 +41,8 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/flask-app:latest
 
-      ## 6. EC2에 배포 (SCP + SSH)
-      - name: Deploy to EC2 (SCP + SSH)
+      ## 6. EC2에 배포 
+      - name: Deploy to EC2 
         env:
           HOST: 43.200.3.202
           USER: ${{ secrets.DEPLOY_USER }}
