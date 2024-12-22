@@ -9,10 +9,11 @@ services:
     volumes:
       - milvus_data:/var/lib/milvus
     environment:
-      - MILVUS_LOG_LEVEL=info
-      - MILVUS_DB_PATH=/var/lib/milvus/db
-      - STANDALONE=true  # Standalone 모드 활성화
-      - LD_PRELOAD=      # LD_PRELOAD 오류 방지
+      - MILVUS_LOG_LEVEL=info         # 로그 레벨 설정
+      - MILVUS_DB_PATH=/var/lib/milvus/db  # DB 저장 경로
+      - MILVUS_DEPLOY_MODE=standalone  # Standalone 모드 활성화
+      - LD_PRELOAD=                    # LD_PRELOAD 오류 방지
+    command: milvus run standalone    # Milvus를 Standalone 모드로 실행
     restart: always
 
   flask-app:
