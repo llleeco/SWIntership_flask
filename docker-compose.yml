@@ -1,20 +1,24 @@
-version: '3.8'
-
 services:
   milvus:
-    image: milvusdb/milvus:latest
+    image: milvusdb/milvus:latest-cpu-only
     container_name: milvus
     ports:
       - "19530:19530"
     volumes:
       - milvus_data:/var/lib/milvus
     environment:
-      - MILVUS_LOG_LEVEL=info         # 로그 레벨 설정
-      - MILVUS_DB_PATH=/var/lib/milvus/db  # DB 저장 경로
-      - MILVUS_DEPLOY_MODE=standalone  # Standalone 모드 활성화
-      - LD_PRELOAD=                    # LD_PRELOAD 오류 방지
-    command: milvus run standalone    # Milvus를 Standalone 모드로 실행
+      - MILVUS_LOG_LEVEL=info
+      - MILVUS_DB_PATH=/var/lib/milvus/db
+      - MILVUS_DEPLOY_MODE=standalone
+      - LD_PRELOAD=
+    command: milvus run standalone
     restart: always
+    network_mode: "host"
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4GB
 
   flask-app:
     container_name: flask-app
@@ -24,8 +28,8 @@ services:
     depends_on:
       - milvus
     environment:
-      - FLASK_APP=app2.py       # Flask 진입점 명시
-      - FLASK_ENV=production    # 프로덕션 모드로 실행
+      - FLASK_APP=app2.py
+      - FLASK_ENV=production
       - MILVUS_HOST=milvus
       - MILVUS_PORT=19530
     restart: always
