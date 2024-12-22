@@ -19,11 +19,11 @@ services:
     ports:
       - "19530:19530"
     volumes:
-      - milvus_data:/var/lib/milvus
+      - flask-milvus-app_milvus_data:/var/lib/milvus
     environment:
       - MILVUS_LOG_LEVEL=info
       - MILVUS_DB_PATH=/var/lib/milvus/db
     restart: always
 
 volumes:
-  milvus_data:
+  flask-milvus-app_milvus_data:
