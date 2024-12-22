@@ -7,6 +7,8 @@ services:
     depends_on:
       - milvus
     environment:
+      - FLASK_APP=app2.py       # Flask 진입점 명시
+      - FLASK_ENV=production    # 프로덕션 모드로 실행
       - MILVUS_HOST=milvus
       - MILVUS_PORT=19530
     restart: always
@@ -24,4 +26,3 @@ services:
 
 volumes:
   milvus_data:
-
