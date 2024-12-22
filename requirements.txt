@@ -70,6 +70,7 @@ opentelemetry-semantic-conventions>=0.49b2
 opentelemetry-util-http>=0.49b2
 orjson>=3.10.12
 overrides>=7.7.0
+pymilvus>=2.0.0
 pandas>=2.0.3
 packaging>=24.2
 pillow>=11.0.0

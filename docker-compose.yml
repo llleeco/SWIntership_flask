@@ -19,11 +19,17 @@ services:
     ports:
       - "19530:19530"
     volumes:
-      - flask-milvus-app_milvus_data:/var/lib/milvus
+      - milvus_data:/var/lib/milvus
     environment:
       - MILVUS_LOG_LEVEL=info
       - MILVUS_DB_PATH=/var/lib/milvus/db
+      - LD_PRELOAD=             # LD_PRELOAD 오류 방지
     restart: always
 
 volumes:
-  flask-milvus-app_milvus_data:
+  milvus_data:
+    driver: local
+    driver_opts:
+      type: none
+      device: /var/lib/docker/volumes/milvus_data/_data
+      o: bind
