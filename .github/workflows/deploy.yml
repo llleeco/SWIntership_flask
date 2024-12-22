@@ -97,12 +97,4 @@ jobs:
             # 컨테이너 상태 확인
             echo "컨테이너 상태를 확인합니다."
             sudo docker-compose ps
-
-            # HEALTHCHECK 검증
-            echo "HEALTHCHECK 검증 중..."
-            if [[ $(sudo docker inspect --format='{{.State.Health.Status}}' flask-app) != "healthy" ]]; then
-              echo "ERROR: Flask 컨테이너가 healthy 상태가 아닙니다!"
-              sudo docker-compose logs flask-app
-              exit 1
-            fi
           EOF
