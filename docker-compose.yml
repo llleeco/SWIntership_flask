@@ -1,4 +1,32 @@
+
 services:
+  etcd:
+    image: quay.io/coreos/etcd:v3.5.4
+    container_name: etcd
+    environment:
+      - ALLOW_NONE_AUTHENTICATION=yes
+      - ETCD_ENABLE_V2=true
+    ports:
+      - "2379:2379"
+    command: etcd -advertise-client-urls http://0.0.0.0:2379 -listen-client-urls http://0.0.0.0:2379
+    restart: always
+
+  milvus:
+    image: milvusdb/milvus:latest
+    container_name: milvus
+    depends_on:
+      - etcd
+    ports:
+      - "19530:19530"
+    volumes:
+      - milvus_data:/var/lib/milvus
+    environment:
+      - MILVUS_LOG_LEVEL=info
+      - MILVUS_DB_PATH=/var/lib/milvus/db
+      - ETCD_ENDPOINTS=http://etcd:2379
+      - LD_PRELOAD=
+    restart: always
+
   flask-app:
     container_name: flask-app
     image: shdhkim/flask-app:latest
@@ -11,19 +39,6 @@ services:
       - FLASK_ENV=production    # 프로덕션 모드로 실행
       - MILVUS_HOST=milvus
       - MILVUS_PORT=19530
-    restart: always
-
-  milvus:
-    image: milvusdb/milvus:latest
-    container_name: milvus
-    ports:
-      - "19530:19530"
-    volumes:
-      - milvus_data:/var/lib/milvus
-    environment:
-      - MILVUS_LOG_LEVEL=info
-      - MILVUS_DB_PATH=/var/lib/milvus/db
-      - LD_PRELOAD=             # LD_PRELOAD 오류 방지
     restart: always
 
 volumes:
