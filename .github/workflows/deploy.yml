@@ -44,7 +44,7 @@ jobs:
       ## 6. EC2에 배포 (SCP + SSH)
       - name: Deploy to EC2 (SCP + SSH)
         env:
-          HOST: 3.36.75.105
+          HOST: 43.200.3.202
           USER: ${{ secrets.DEPLOY_USER }}
           KEY: ${{ secrets.DEPLOY_KEY }}
           DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
