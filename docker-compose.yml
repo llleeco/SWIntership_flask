@@ -3,15 +3,17 @@ services:
     image: milvusdb/milvus:latest
     container_name: milvus
     ports:
-      - "19530:19530"
+      - "19530:19530"  # Milvus gRPC 포트
     volumes:
-      - milvus_data:/var/lib/milvus
+      - milvus_data:/var/lib/milvus  # Milvus 데이터 저장
     environment:
       - MILVUS_LOG_LEVEL=info
       - MILVUS_DB_PATH=/var/lib/milvus/db
-      - MILVUS_DEPLOY_MODE=standalone
+      - MILVUS_DEPLOY_MODE=standalone  # Standalone 모드
       - LD_PRELOAD=
-    command: milvus run standalone
+      - ETCD_USE=false  # etcd 비활성화
+      - ETCD_ENDPOINTS=
+    command: ["milvus", "run", "standalone"]
     restart: always
     networks:
       - app_network
@@ -20,13 +22,13 @@ services:
     container_name: flask-app
     image: shdhkim/flask-app:latest
     ports:
-      - "5000:5000"
+      - "5000:5000"  # Flask API 포트
     depends_on:
-      - milvus
+      - milvus  # Milvus 서비스 의존성
     environment:
       - FLASK_APP=app2.py
       - FLASK_ENV=production
-      - MILVUS_HOST=milvus
+      - MILVUS_HOST=milvus  # Milvus 네트워크 호스트
       - MILVUS_PORT=19530
     restart: always
     networks:
@@ -37,9 +39,9 @@ volumes:
     driver: local
     driver_opts:
       type: none
-      device: /var/lib/docker/volumes/milvus_data/_data
+      device: /var/lib/docker/volumes/milvus_data/_data  # 호스트 데이터 경로
       o: bind
 
 networks:
   app_network:
-    driver: bridge
+    driver: bridge  # 컨테이너 간 통신용 네트워크
