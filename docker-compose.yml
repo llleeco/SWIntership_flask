@@ -15,11 +15,6 @@ services:
     restart: always
     networks:
       - app_network
-    deploy:
-      resources:
-        limits:
-          cpus: '2'
-          memory: 4GB
 
   flask-app:
     container_name: flask-app
